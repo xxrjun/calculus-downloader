@@ -7,6 +7,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Optional, Tuple
+from playwright.sync_api import sync_playwright
 
 import requests
 from bs4 import BeautifulSoup
@@ -59,6 +60,44 @@ class ExamDownloader:
         self.session = self._init_session()
         self.base_dir = self._create_directory_structure()
 
+    def _login(self) -> None:
+        """使用 Playwright 進行登入"""
+        with sync_playwright() as p:
+            # 啟動瀏覽器
+            browser = p.chromium.launch(headless=False)  # headless=True 可隱藏瀏覽器
+            page = browser.new_page()
+
+            try:
+                # 訪問登入頁面
+                page.goto("https://united-cal.math.ncu.edu.tw/login")
+                
+                # 點擊中央Portal登入按鈕
+                page.click("text=中央Portal登入")
+
+                try:
+                    # 嘗試點擊確認按鈕
+                    page.click("button.btn.btn-danger[type='submit']", timeout=5000)
+                except:
+                    # 需要登入
+                    page.fill("input[name='username']", os.getenv("PORTAL_ACCOUNT"))
+                    page.fill("input[name='password']", os.getenv("PORTAL_PASSWORD"))
+                    # page.click("input[type='submit']")
+                    submit_button = page.locator("button[type='submit'], input[type='submit']").first
+                    submit_button.click()
+                    logger.info("已提交登入表單")
+                    page.click("button.btn.btn-danger[type='submit']")
+
+                # 等待頁面載入完成
+                page.wait_for_load_state("networkidle")
+
+                # 獲取並設定 cookies
+                cookies = page.context.cookies()
+                for cookie in cookies:
+                    self.session.cookies.set(cookie["name"], cookie["value"])
+
+            finally:
+                browser.close()
+
     @staticmethod
     def _init_session() -> requests.Session:
         """初始化 session"""
@@ -78,54 +117,54 @@ class ExamDownloader:
                 (base_dir / str(exam_num) / subdir).mkdir(parents=True, exist_ok=True)
         return base_dir
 
-    def _login(self) -> None:
-        """使用 Selenium 進行登入"""
-        options = webdriver.ChromeOptions()
-        driver = webdriver.Chrome(options=options)
+    # def _login(self) -> None:
+    #     """使用 Selenium 進行登入"""
+    #     options = webdriver.ChromeOptions()
+    #     driver = webdriver.Chrome(options=options)
 
-        try:
-            driver.get("https://united-cal.math.ncu.edu.tw/login")
+    #     try:
+    #         driver.get("https://united-cal.math.ncu.edu.tw/login")
             
-            # 點擊中央Portal登入按鈕
-            portal_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), '中央Portal登入')]"))
-            )
-            portal_btn.click()
+    #         # 點擊中央Portal登入按鈕
+    #         portal_btn = WebDriverWait(driver, 10).until(
+    #             EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), '中央Portal登入')]"))
+    #         )
+    #         portal_btn.click()
 
-            try:
-                # 嘗試點擊確認按鈕
-                proceed_btn = WebDriverWait(driver, 5).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn.btn-danger[type='submit']"))
-                )
-                proceed_btn.click()
-            except:
-                # 需要登入
-                self._handle_login(driver)
+    #         try:
+    #             # 嘗試點擊確認按鈕
+    #             proceed_btn = WebDriverWait(driver, 5).until(
+    #                 EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn.btn-danger[type='submit']"))
+    #             )
+    #             proceed_btn.click()
+    #         except:
+    #             # 需要登入
+    #             self._handle_login(driver)
 
-            # 獲取並設定 cookies
-            for cookie in driver.get_cookies():
-                self.session.cookies.set(cookie['name'], cookie['value'])
+    #         # 獲取並設定 cookies
+    #         for cookie in driver.get_cookies():
+    #             self.session.cookies.set(cookie['name'], cookie['value'])
 
-        finally:
-            driver.quit()
+    #     finally:
+    #         driver.quit()
 
-    def _handle_login(self, driver: webdriver.Chrome) -> None:
-        """處理登入流程"""
-        username_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.NAME, "username"))
-        )
-        password_input = driver.find_element(By.NAME, "password")
+    # def _handle_login(self, driver: webdriver.Chrome) -> None:
+    #     """處理登入流程"""
+    #     username_input = WebDriverWait(driver, 10).until(
+    #         EC.presence_of_element_located((By.NAME, "username"))
+    #     )
+    #     password_input = driver.find_element(By.NAME, "password")
 
-        username_input.send_keys(os.getenv("PORTAL_ACCOUNT"))
-        password_input.send_keys(os.getenv("PORTAL_PASSWORD"))
-        password_input.submit()
+    #     username_input.send_keys(os.getenv("PORTAL_ACCOUNT"))
+    #     password_input.send_keys(os.getenv("PORTAL_PASSWORD"))
+    #     password_input.submit()
 
-        # 點擊確認按鈕
-        proceed_btn = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn.btn-danger[type='submit']"))
-        )
-        proceed_btn.click()
-        time.sleep(5)
+    #     # 點擊確認按鈕
+    #     proceed_btn = WebDriverWait(driver, 10).until(
+    #         EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn.btn-danger[type='submit']"))
+    #     )
+    #     proceed_btn.click()
+    #     time.sleep(5)
 
     def _parse_exam_file(self, filename: str, url: str) -> Optional[ExamFile]:
         """解析考試檔案資訊"""

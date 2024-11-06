@@ -18,10 +18,23 @@ conda activate iwantitall
 1. 安裝所需套件
 
    ```bash
-   pip install selenium requests beautifulsoup4 python-dotenv tqdm
+   pip install selenium requests beautifulsoup4 python-dotenv tqdm playwright
    ```
 
-2. 安裝 [ChromeDriver](https://sites.google.com/chromium.org/driver/) (需與 Chrome 版本相符)，最新穩定版可前往 [此處](https://googlechromelabs.github.io/chrome-for-testing/#stable) 下載
+<!-- 2. 安裝 [ChromeDriver](https://sites.google.com/chromium.org/driver/) (需與 Chrome 版本相符)，最新穩定版可前往 [此處](https://googlechromelabs.github.io/chrome-for-testing/#stable) 下載 -->
+
+2. [Playwright](https://playwright.dev/python/docs/intro) 安裝特定瀏覽器
+
+   ```bash
+   # 只安裝 Chromium
+   playwright install chromium
+
+   # 只安裝 Firefox
+   playwright install firefox
+
+   # 只安裝 WebKit (Safari)
+   playwright install webkit
+   ```
 
 ## 使用方式
 
