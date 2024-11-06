@@ -1,0 +1,4 @@
+.env
+exams
+*.log
+.DS_Store
