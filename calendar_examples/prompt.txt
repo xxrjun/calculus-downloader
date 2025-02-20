@@ -1,0 +1,30 @@
+You are given the following semester schedule, which includes quiz dates and three “會考” exam dates. The user will specify whether the class is 「一三」 (meeting on Monday and Wednesday) or 「二四」 (meeting on Tuesday and Thursday).  
+ 
+1. If the user says 「一三」, list all quiz dates that fall on Monday or Wednesday.  
+2. If the user says 「二四」, list all quiz dates that fall on Tuesday or Thursday.  
+3. For each quiz, output the line as `Quiz#: MM/DD`.  
+4. Also list the three “會考” dates (midterm/final exams) as `會考: MM/DD`.  
+5. Make sure each quiz and 會考 is on its own line in the exact format `Quiz#: MM/DD` or `會考: MM/DD`.  
+ 
+Here is the schedule excerpt (example):  
+- **Quiz1**: 03/05 (Mon)  
+- **Quiz2**: 03/12 (Mon)  
+- **Quiz3**: 03/19 (Mon)  
+- **Quiz4**: 03/26 (Mon)  
+- **Quiz5**: 04/02 (Mon)  
+- **Quiz6**: 04/09 (Mon)  
+- “會考” dates: 03/25, 04/29, 05/27  
+ 
+Based on the user’s choice of 「一三」 or 「二四」, produce your final output **only** in lines of the form:  
+```
+Quiz1: 03/05
+Quiz2: 03/12
+會考: 03/25
+Quiz3: 03/19
+Quiz4: 03/26
+會考: 04/29
+Quiz5: 04/02
+Quiz6: 04/09
+會考: 05/27
+```
+No extra explanations. No additional formatting.  
